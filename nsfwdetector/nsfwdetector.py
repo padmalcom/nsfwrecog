@@ -58,7 +58,6 @@ class NsfwDetector:
     def detect(self, image, confidence=0.25):
         res = self.model.predict(task="detect", source=image, conf=confidence)
         objects = []
-        box_count = 0
         for r in res:
             result = r.cpu()
             for bb in result.boxes:
@@ -72,6 +71,78 @@ class NsfwDetector:
                 ]
                 objects.append(o)
         return objects
+
+    def __res_to_frame__(self, frame, res):
+        for r in res:
+            result = r.cpu()
+            for bb in result.boxes:
+                frame = cv2.rectangle(
+                    frame,
+                    (int(bb.xyxy[0][0].item()), int(bb.xyxy[0][1].item())),
+                    (int(bb.xyxy[0][2].item()), int(bb.xyxy[0][3].item())),
+                    (255, 0, 0),
+                    2
+                )
+                frame = cv2.putText(
+                    frame,
+                    self.classes[int(bb.cls.item())],
+                    (int(bb.xyxy[0][0].item()) + 5, int(bb.xyxy[0][1].item()) + 5),
+                    cv2.FONT_HERSHEY_SIMPLEX, 
+                    1,
+                    (255, 0, 0),
+                    2,
+                    cv2.LINE_AA
+                )
+        return frame
+
+    def camera(self, confidence=0.25):
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            raise IOError("Cannot open webcam")
+
+        while True:
+            ret, frame = cap.read()
+            #frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
+            res = self.model.predict(source=frame, conf=confidence)
+
+            frame = self.__res_to_frame__(frame, res)
+
+            cv2.imshow('Input', frame)
+
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                break
+
+        cap.release()
+        cv2.destroyAllWindows()
+
+    def video(self, video_input, video_output, confidence=0.25):
+        cap = cv2.VideoCapture('test.mp4')
+        if (cap.isOpened()== False): 
+            print("Error opening video stream or file")
+
+        frame_width = int(cap.get(3))
+        frame_height = int(cap.get(4))
+        fps = int(cap.get(cv2.CAP_PROP_FPS))
+        out = cv2.VideoWriter(video_output, cv2.VideoWriter_fourcc(*'XVID'), fps, (frame_width,frame_height))
+ 
+        while(cap.isOpened()):
+            ret, frame = cap.read()
+            if ret == True:
+                res = self.model.predict(source=frame, conf=confidence)
+                frame = self.__res_to_frame__(frame, res)
+
+                #cv2.imshow('Frame',frame)
+                out.write(frame)
+ 
+                if cv2.waitKey(25) & 0xFF == ord('q'):
+                    break
+            else: 
+                break
+ 
+        cap.release()
+        out.release()
+        cv2.destroyAllWindows()
+
 
     def blur(self, image_input, image_output):
         image = cv2.imread(image_input)
