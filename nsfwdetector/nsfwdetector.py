@@ -3,6 +3,7 @@ import os
 import requests
 from tqdm import tqdm
 from ultralytics import YOLO
+import cv2
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +18,7 @@ class NsfwDetector:
     def __download__(self, url, file_name, chunk_size=1024):
         resp = requests.get(
             url,
-            stream=True,
-            headers={
-                'accept': 'application/vnd.github.v3.raw',
-                'authorization': 'token {}'.format("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")
-            }
+            stream=True
         )
         total = int(resp.headers.get('content-length', 0))
         with open(file_name, 'wb') as file, tqdm(
@@ -68,10 +65,28 @@ class NsfwDetector:
                 o = {}
                 o['class'] = self.classes[int(bb.cls.item())]
                 o['bbox'] = [
-                    bb.xyxy[0][0].item(),
-                    bb.xyxy[0][1].item(),
-                    bb.xyxy[0][2].item(),
-                    bb.xyxy[0][3].item()
+                    int(bb.xyxy[0][0].item()),
+                    int(bb.xyxy[0][1].item()),
+                    int(bb.xyxy[0][2].item()),
+                    int(bb.xyxy[0][3].item())
                 ]
                 objects.append(o)
         return objects
+
+    def blur(self, image_input, image_output):
+        image = cv2.imread(image_input)
+        res = self.detect(image_input)
+
+        for r in res:
+            top_x = r['bbox'][0]
+            top_y = r['bbox'][1]
+            bottom_x = r['bbox'][2]
+            bottom_y = r['bbox'][3]
+
+            region = image[top_y:bottom_y, top_x:bottom_x]
+            blurred_region = cv2.GaussianBlur(region, (17, 17), 30)
+            image[top_y:top_y+blurred_region.shape[0], top_x:top_x+blurred_region.shape[1]] = blurred_region
+
+            #image = cv2.rectangle(image, (r['bbox'][0], r['bbox'][1]), (r['bbox'][2], r['bbox'][3]), (0, 0, 0), cv2.FILLED)
+
+            cv2.imwrite(image_output, image)
