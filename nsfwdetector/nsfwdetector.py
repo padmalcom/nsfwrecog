@@ -44,19 +44,19 @@ class NsfwDetector:
         model_path = os.path.join(model_folder, model_name)
         classes_path = os.path.join(model_folder, "classes.txt")
         
-        if not os.path.exists(model_path):
+        if not os.path.exists(model_path) or os.path.getsize(model_path) == 0:
             logger.info("Downloading the checkpoint to %s", model_path)
             self.__download__(MODEL_URL, model_path)
 
-        if not os.path.exists(classes_path):
+        if not os.path.exists(classes_path) or os.path.getsize(classes_path) == 0:
             logger.info("Downloading the classes list to %s", classes_path)
             self.__download__(CLASSES_URL, classes_path)
 
-        self.model = YOLO(model_path)
+        self.model = YOLO(model_path, task="detect")
         self.classes = [c.strip() for c in open(classes_path).readlines() if c.strip()]
 
     def detect(self, image, confidence=0.25):
-        res = self.model.predict(task="detect", source=image, conf=confidence)
+        res = self.model.predict(task="detect", source=image, conf=confidence, verbose=False)
         objects = []
         for r in res:
             result = r.cpu()
@@ -86,7 +86,7 @@ class NsfwDetector:
                 frame = cv2.putText(
                     frame,
                     self.classes[int(bb.cls.item())],
-                    (int(bb.xyxy[0][0].item()) + 5, int(bb.xyxy[0][1].item()) + 5),
+                    (int(bb.xyxy[0][0].item()) + 5, int(bb.xyxy[0][1].item()) + 15),
                     cv2.FONT_HERSHEY_SIMPLEX, 
                     1,
                     (255, 0, 0),
@@ -95,15 +95,14 @@ class NsfwDetector:
                 )
         return frame
 
-    def camera(self, confidence=0.25):
-        cap = cv2.VideoCapture(0)
+    def camera(self, cam_id=0, confidence=0.25):
+        cap = cv2.VideoCapture(cam_id)
         if not cap.isOpened():
             raise IOError("Cannot open webcam")
 
         while True:
             ret, frame = cap.read()
-            #frame = cv2.resize(frame, None, fx=0.5, fy=0.5, interpolation=cv2.INTER_AREA)
-            res = self.model.predict(source=frame, conf=confidence)
+            res = self.model.predict(source=frame, conf=confidence, verbose=False)
 
             frame = self.__res_to_frame__(frame, res)
 
@@ -118,20 +117,19 @@ class NsfwDetector:
     def video(self, video_input, video_output, confidence=0.25):
         cap = cv2.VideoCapture('test.mp4')
         if (cap.isOpened()== False): 
-            print("Error opening video stream or file")
+            raise IOError("Cannot open video stream or file")
 
         frame_width = int(cap.get(3))
         frame_height = int(cap.get(4))
         fps = int(cap.get(cv2.CAP_PROP_FPS))
         out = cv2.VideoWriter(video_output, cv2.VideoWriter_fourcc(*'XVID'), fps, (frame_width,frame_height))
- 
-        while(cap.isOpened()):
+        frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        for i in tqdm(range(frame_count)):
             ret, frame = cap.read()
             if ret == True:
-                res = self.model.predict(source=frame, conf=confidence)
+                res = self.model.predict(source=frame, conf=confidence, verbose=False)
                 frame = self.__res_to_frame__(frame, res)
-
-                #cv2.imshow('Frame',frame)
                 out.write(frame)
  
                 if cv2.waitKey(25) & 0xFF == ord('q'):
@@ -157,7 +155,4 @@ class NsfwDetector:
             region = image[top_y:bottom_y, top_x:bottom_x]
             blurred_region = cv2.GaussianBlur(region, (17, 17), 30)
             image[top_y:top_y+blurred_region.shape[0], top_x:top_x+blurred_region.shape[1]] = blurred_region
-
-            #image = cv2.rectangle(image, (r['bbox'][0], r['bbox'][1]), (r['bbox'][2], r['bbox'][3]), (0, 0, 0), cv2.FILLED)
-
-            cv2.imwrite(image_output, image)
+        cv2.imwrite(image_output, image)
