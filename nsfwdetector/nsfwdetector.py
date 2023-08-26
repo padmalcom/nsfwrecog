@@ -20,6 +20,10 @@ class NsfwDetector:
             url,
             stream=True
         )
+        
+        if resp.status_code != 200:
+            raise Exception("Unexpected status code {code}.", code = resp.status_code)
+            
         total = int(resp.headers.get('content-length', 0))
         with open(file_name, 'wb') as file, tqdm(
             desc=file_name,
@@ -30,28 +34,59 @@ class NsfwDetector:
         ) as bar:
             for data in resp.iter_content(chunk_size=chunk_size):
                 size = file.write(data)
-                bar.update(size)    
+                bar.update(size)
 
-    def __init__(self):
-        # create a path to store the models
-        home = os.path.expanduser("~")
-        model_folder = os.path.join(home, f".NsfwDetector/")
-        if not os.path.exists(model_folder):
-            os.makedirs(model_folder)
+    def __not_found__(self, file_path):
+        try:
+            with open(file_path, 'r') as f:
+               lines = f.readlines()
+               if len(lines) == 1:
+                   if lines[0] == "Not Found":
+                       return True
+        except UnicodeDecodeError:
+            return False
+        return False                 
 
-        # prepare filenames
-        model_name = os.path.basename(MODEL_URL)
-        model_path = os.path.join(model_folder, model_name)
-        classes_path = os.path.join(model_folder, "classes.txt")
+    def __init__(self, model_file=None):
+        if model_file is None:
+            # create a path to store the models
+            home = os.path.expanduser("~")
+            model_folder = os.path.join(home, f".NsfwDetector/")
+            if not os.path.exists(model_folder):
+                os.makedirs(model_folder)
+
+            # prepare filenames
+            model_name = os.path.basename(MODEL_URL)
+            model_path = os.path.join(model_folder, model_name)
+            classes_path = os.path.join(model_folder, "classes.txt")
+            
+            if not os.path.exists(model_path) or os.path.getsize(model_path) == 0:
+                logger.info("Downloading the checkpoint to %s", model_path)
+                self.__download__(MODEL_URL, model_path)
+
+            if not os.path.exists(classes_path) or os.path.getsize(classes_path) == 0:
+                logger.info("Downloading the classes list to %s", classes_path)
+                self.__download__(CLASSES_URL, classes_path)
+        else:
+            model_path = model_file
+            classes_path = os.path.join(os.path.dirname(model_file), "classes.txt")
+            if not os.path.exists(model_path):
+                raise Exception("Model path {mp} does not exist.".format(mp=model_path))
+            if not os.path.exists(classes_path):
+                raise Exception("Classes path {cp} does not exist.".format(cp=classes_path))
+
+        if os.path.getsize(model_path) == 0:
+            raise Exception("Model file size is 0.")
+
+        if os.path.getsize(classes_path) == 0:
+            raise Exception("Classes file size is 0.")        
+
+        if self.__not_found__(model_path):
+           raise Exception("Model file not downloaded correctly.")
+           
+        if self.__not_found__(classes_path):
+           raise Exception("Classes file not downloaded correctly.")
         
-        if not os.path.exists(model_path) or os.path.getsize(model_path) == 0:
-            logger.info("Downloading the checkpoint to %s", model_path)
-            self.__download__(MODEL_URL, model_path)
-
-        if not os.path.exists(classes_path) or os.path.getsize(classes_path) == 0:
-            logger.info("Downloading the classes list to %s", classes_path)
-            self.__download__(CLASSES_URL, classes_path)
-
         self.model = YOLO(model_path, task="detect")
         self.classes = [c.strip() for c in open(classes_path).readlines() if c.strip()]
 
