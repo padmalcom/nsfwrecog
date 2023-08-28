@@ -7,7 +7,7 @@ This library is meant to detect and censor nsfw content in public media. Models 
 ## Installation
 - install requirements.txt
 - install pytorch according to your cuda version
-- install onnxruntime or onnxruntime-gpu
+- (optional) install onnxruntime-gpu to support cuda usage
 
 ## Usage
 Instantiate a NsfwDetector class and use the methods detect(), blur(), video() and camera(). The demos show the usage:

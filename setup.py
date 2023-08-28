@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="nsfwdetector",
+    name="nsfwdetection",
     version="1.0",
     author="padmalcom",
-    description="This library detects nsfw content in images and videos and censores them.",
+    description="This library detects nsfw objects and body parts in images and videos and optionally censores them.",
 	test_suite="tests",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/padmalcom/nsfwdetector",
+    url="https://github.com/padmalcom/nsfwdetection",
 	packages=find_packages(exclude=("tests", "requirements.txt",)),
 	include_package_data=True,
 	install_requires=[
@@ -34,6 +34,7 @@ setup(
 		"networkx>=3.1",
 		"numpy>=1.25.2",
 		"onnx>=1.14.0",
+		"onnxruntime>=1.15.1",
 		"opencv-python>=4.8.0.76",
 		"packaging>=23.1",
 		"pandas>=2.0.3",

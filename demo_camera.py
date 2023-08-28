@@ -1,5 +1,5 @@
-from nsfwdetector.nsfwdetector import NsfwDetector
+from nsfwdetection.nsfwdetection import NsfwDetection
 
 if __name__ == '__main__':
-    det = NsfwDetector()
-    det.camera(0)
+    det = NsfwDetection()
+    det.camera(1)

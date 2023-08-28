@@ -7,10 +7,10 @@ import cv2
 
 logger = logging.getLogger(__name__)
 
-MODEL_URL = "https://github.com/padmalcom/nsfwdectector/releases/download/nsfwdetector_v1/nsfwdetector_v1.onnx"
-CLASSES_URL = "https://github.com/padmalcom/nsfwdectector/releases/download/nsfwdetector_v1/classes.txt"
+MODEL_URL = "https://github.com/padmalcom/nsfwdetection/releases/download/nsfwdetection_v1/nsfwdetection_v1.onnx"
+CLASSES_URL = "https://github.com/padmalcom/nsfwdetection/releases/download/nsfwdetection_v1/classes.txt"
 
-class NsfwDetector:
+class NsfwDetection:
 
     model = None
     classes = None
@@ -22,7 +22,7 @@ class NsfwDetector:
         )
         
         if resp.status_code != 200:
-            raise Exception("Unexpected status code {code}.", code = resp.status_code)
+            raise Exception("Unexpected status code {code}.".format(code = resp.status_code))
             
         total = int(resp.headers.get('content-length', 0))
         with open(file_name, 'wb') as file, tqdm(
@@ -51,7 +51,7 @@ class NsfwDetector:
         if model_file is None:
             # create a path to store the models
             home = os.path.expanduser("~")
-            model_folder = os.path.join(home, f".NsfwDetector/")
+            model_folder = os.path.join(home, f".NsfwDetection/")
             if not os.path.exists(model_folder):
                 os.makedirs(model_folder)
 
@@ -59,6 +59,7 @@ class NsfwDetector:
             model_name = os.path.basename(MODEL_URL)
             model_path = os.path.join(model_folder, model_name)
             classes_path = os.path.join(model_folder, "classes.txt")
+            print("Model path", model_path)
             
             if not os.path.exists(model_path) or os.path.getsize(model_path) == 0:
                 logger.info("Downloading the checkpoint to %s", model_path)
@@ -121,7 +122,7 @@ class NsfwDetector:
                 frame = cv2.putText(
                     frame,
                     self.classes[int(bb.cls.item())],
-                    (int(bb.xyxy[0][0].item()) + 5, int(bb.xyxy[0][1].item()) + 15),
+                    (int(bb.xyxy[0][0].item()) + 1, int(bb.xyxy[0][1].item()) + 25),
                     cv2.FONT_HERSHEY_SIMPLEX, 
                     1,
                     (255, 0, 0),
