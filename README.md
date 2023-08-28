@@ -1,6 +1,6 @@
-# NSFW detector
+# NSFW Recog
 This library is meant to detect and censor nsfw content in public media. Models can be found
-[here](https://github.com/padmalcom/nsfwdectector/releases/tag/nsfwdetector_v1), they are downloaded automatically and cached.
+[here](https://github.com/padmalcom/nsfwrecog/releases/tag/nsfwrecog_v1), they are downloaded automatically and cached.
 
 ![sample image](graphics/sample.png)
 

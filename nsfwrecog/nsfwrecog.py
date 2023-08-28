@@ -7,10 +7,10 @@ import cv2
 
 logger = logging.getLogger(__name__)
 
-MODEL_URL = "https://github.com/padmalcom/nsfwdetection/releases/download/nsfwdetection_v1/nsfwdetection_v1.onnx"
-CLASSES_URL = "https://github.com/padmalcom/nsfwdetection/releases/download/nsfwdetection_v1/classes.txt"
+MODEL_URL = "https://github.com/padmalcom/nsfwrecog/releases/download/nsfwrecog_v1/nsfwrecog_v1.onnx"
+CLASSES_URL = "https://github.com/padmalcom/nsfwrecog/releases/download/nsfwrecog_v1/classes.txt"
 
-class NsfwDetection:
+class NsfwRecog:
 
     model = None
     classes = None
@@ -51,7 +51,7 @@ class NsfwDetection:
         if model_file is None:
             # create a path to store the models
             home = os.path.expanduser("~")
-            model_folder = os.path.join(home, f".NsfwDetection/")
+            model_folder = os.path.join(home, f".NsfwRecog/")
             if not os.path.exists(model_folder):
                 os.makedirs(model_folder)
 

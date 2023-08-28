@@ -4,14 +4,14 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="nsfwdetection",
+    name="nsfwrecog",
     version="1.0",
     author="padmalcom",
     description="This library detects nsfw objects and body parts in images and videos and optionally censores them.",
 	test_suite="tests",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/padmalcom/nsfwdetection",
+    url="https://github.com/padmalcom/nsfwrecog",
 	packages=find_packages(exclude=("tests", "requirements.txt",)),
 	include_package_data=True,
 	install_requires=[
