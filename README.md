@@ -1,27 +1,3 @@
----
-tags:
-  - yolov8
-  - yolo
-  - vision
-  - object-detection
-  - pytorch
-  - nsfw
-  - censor
-library_name: nsfw-recog
-library_version: 1.0
-model-index:
-  - name: padmalcom/nsfw-recog-yolov8
-    results:
-      - task:
-          type: object-detection
-        metrics:
-          - type: precision
-            value: 0.554
-            name: mAP@0.5(box)
-language:
-  - en
-pipeline_tag: object-detection
----
 # NSFW Recog
 This library is meant to detect and censor nsfw content in public media. Models can be found
 [here](https://github.com/padmalcom/nsfwrecog/releases/tag/nsfwrecog_v1), they are downloaded automatically and cached in ~/.NsfwRecog.
